@@ -1,0 +1,39 @@
+# Gauge - metadata dir
+.gauge
+
+# Gauge - log files dir
+logs
+*.log
+
+# Gauge - reports dir
+reports
+
+# Gauge - python compiled files
+*.pyc
+*.DS_Store
+# Virtual Environment
+.venv/
+
+*/__pycache__
+
+# behave output
+output/
+
+# test coverage
+.coverage
+
+.idea
+.coverage   
+
+# env file
+.env
+
+# vscode
+.vscode
+
+# app installer
+*.apk
+*.app
+
+# test file
+test.py

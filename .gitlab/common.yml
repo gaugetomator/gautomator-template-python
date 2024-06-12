@@ -1,0 +1,16 @@
+variables:
+  RUNNER_REQUEST_TIMEOUT: 200000
+  MAX_RETRY_DEFAULT: "1"
+  PROJECT_NAME_DEFAULT: "Gautomator Framework"
+  TELEGRAM_CHANNEL_ID_DEFAULT: # 
+
+
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
+
+  IMAGE: 
+
+
+before_script:
+- gauge config runner_connection_timeout $RUNNER_CONNECTION_TIMEOUT
+- gauge config runner_request_timeout $RUNNER_REQUEST_TIMEOUT

@@ -1,0 +1,66 @@
+include:
+  - local: '.gitlab/common.yml'
+
+stages:
+  - system-test
+  - functional-test
+  - integration-test
+  - trigger-pipeline
+
+variables:
+  MASTER_BRANCH: main
+  EVENT_MR: merge_request_event
+  TAG: general
+  ENV: uat
+  GAUGE_COMMAND: 'gauge run -l debug'
+  REPORT_COMMAND: 'python making_report.py'
+  RUNNER_TAG: osx
+
+system-smoke-test:
+  stage: system-test
+  allow_failure: false
+  tags: 
+    - $RUNNER_TAG
+  script:
+    - $GAUGE_COMMAND -e web/test,web/browsers/chrome || RUN_FAIL_WEB=true
+    - $GAUGE_COMMAND -e api/test || RUN_FAIL_API=true
+    - $GAUGE_COMMAND -e android/test || RUN_FAIL_ANDROID=true
+    - $GAUGE_COMMAND -e ios/test || RUN_FAIL_IOS=true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == $EVENT_MR
+      changes:
+        - "**/*.py"
+  artifacts:
+    reports:
+      junit:
+        - reports/xml-report/*/*.xml
+  image: $IMAGE
+
+job:on-schedule:
+  variables:
+    MAX_RETRY: "${MAX_RETRY_DEFAULT:-1}"
+    CONFIG: $CONFIG
+    TAG: $TAG
+    TELEGRAM_CHANNEL_ID: "${TELEGRAM_CHANNEL_ID_DEFAULT:-1}"
+    PROJECT_NAME: "${PROJECT_NAME_DEFAULT:-1}"
+    ENV_CONFIG: $ENV_CONFIG
+  stage: integration-test
+  tags: 
+    - $RUNNER_TAG
+  script:
+    - if [[ -z "$TELEGRAM_CHANNEL_ID" ]]; then TELEGRAM_CHANNEL_ID="$TELEGRAM_CHANNEL_ID_DEFAULT"; fi
+    - if [[ -z "$MAX_RETRY" ]]; then MAX_RETRY="$MAX_RETRY_DEFAULT"; fi
+    - if [[ -z "$PROJECT_NAME" ]]; then PROJECT_NAME="$PROJECT_NAME_DEFAULT"; fi
+    - echo "$GAUGE_COMMAND -e env/${ENV},${CONFIG} -t ${TAG} -v --max-retries-count=${MAX_RETRY}"
+    - $GAUGE_COMMAND -e env/${ENV},${CONFIG} -t ${TAG} -v --max-retries-count=${MAX_RETRY} || RUN_FAIL=true
+    - $REPORT_COMMAND 
+    - if [ "$RUN_FAIL" == "true" ]; then exit 1; fi
+
+
+  artifacts:
+    reports:
+      junit:
+        - reports/xml-report/*/*.xml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  image: $IMAGE
