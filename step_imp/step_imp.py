@@ -118,7 +118,7 @@ def suite_set_up():
         if is_testlink:
             CommonUsage.test_link_generator()
         if is_api:  # api case
-            _swagger_url = os.getenv(APIConst.SWAGGER_URL)
+            _swagger_url = os.getenv(APIConst.SWAGGER_URL) % {'env': env}
             if _swagger_url:
                 SwaggerUtil.parsing_swagger(
                     url=_swagger_url, is_gitlab=True if os.getenv(APIConst.IS_GITLAB) == CommonTypeUsageConst.TRUE else False, prj_name=project_name)
